@@ -7,11 +7,12 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from 'react';
 
-import { initialFileTree } from '@/data/initialData';
-import { ExplorerState, FileNode, NodeType } from '@/types';
+import { FileNode, NodeType } from '@/types';
 import { findNodeById } from '@/utils/treeHelpers';
+import { loadState, saveState } from '@/lib/storage';
 import {
   createAddNodeAction,
   createDeleteNodeAction,
@@ -24,40 +25,53 @@ import {
 import { explorerReducer } from './explorerReducer';
 import { ExplorerContextValue } from './explorerTypes';
 
-const STORAGE_KEY = 'mini-file-explorer-state';
-
-const initialState: ExplorerState = {
-  fileTree: initialFileTree,
-  selectedNodeId: null,
-  expandedFolders: ['root'],
-  openedFileId: null,
-};
-
-function loadStateFromStorage(): ExplorerState {
-  if (typeof window === 'undefined') return initialState;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialState;
-    const parsed = JSON.parse(raw) as ExplorerState;
-    return parsed;
-  } catch {
-    return initialState;
-  }
-}
+// ---------------------------------------------------------------------------
+// How long to wait after the last state change before writing to localStorage.
+// Editor keystrokes dispatch UPDATE_FILE_CONTENT on every character; without
+// debouncing this would serialise the entire tree on every keystroke.
+// ---------------------------------------------------------------------------
+const PERSIST_DEBOUNCE_MS = 400;
 
 const ExplorerContext = createContext<ExplorerContextValue | null>(null);
 
 export function ExplorerProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(explorerReducer, initialState, loadStateFromStorage);
+  // loadState() runs once as the useReducer initialiser — it is called during
+  // the first render only and never on subsequent renders.
+  const [state, dispatch] = useReducer(explorerReducer, undefined, loadState);
+
+  // ----- Debounced persistence -----
+  // We keep a timer ref rather than putting it in state so that scheduling /
+  // cancelling the write never triggers a re-render.
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // Storage may be unavailable in some environments
-    }
+    if (persistTimer.current) clearTimeout(persistTimer.current);
+
+    persistTimer.current = setTimeout(() => {
+      saveState(state);
+    }, PERSIST_DEBOUNCE_MS);
+
+    return () => {
+      if (persistTimer.current) clearTimeout(persistTimer.current);
+    };
   }, [state]);
 
+  // Flush immediately before the tab closes so no data is lost between the
+  // last debounced write and the unload event.
+  useEffect(() => {
+    function onBeforeUnload() {
+      if (persistTimer.current) {
+        clearTimeout(persistTimer.current);
+        persistTimer.current = null;
+      }
+      saveState(state);
+    }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  // ----- Action helpers -----
   const selectNode = useCallback((id: string | null) => {
     dispatch(createSelectNodeAction(id));
   }, []);
