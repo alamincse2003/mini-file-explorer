@@ -6,7 +6,6 @@ interface InlineRenameInputProps {
   value: string;
   onChange: (v: string) => void;
   onCommit: () => void;
-  onCancel: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   className?: string;
 }
@@ -15,14 +14,12 @@ export default function InlineRenameInput({
   value,
   onChange,
   onCommit,
-  onCancel,
   onKeyDown,
   className = '',
 }: InlineRenameInputProps) {
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // select-all after mount so the existing name is ready to overwrite
     const t = setTimeout(() => ref.current?.select(), 0);
     return () => clearTimeout(t);
   }, []);
@@ -38,8 +35,9 @@ export default function InlineRenameInput({
       onBlur={onCommit}
       onClick={(e) => e.stopPropagation()}
       className={[
-        'w-full rounded border border-(--primary-500) bg-app',
-        'px-1.5 py-0.5 text-sm font-medium text-title outline-none',
+        'w-full rounded-md border border-(--primary-500) bg-app',
+        'px-1.5 py-0.5 text-sm font-medium text-title',
+        'outline-none ring-1 ring-(--primary-500)/40',
         className,
       ].join(' ')}
     />

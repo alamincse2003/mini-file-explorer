@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-/* DESIGN SYSTEM VARIABLES */
+/* =========================
+DESIGN SYSTEM VARIABLES
+========================= */
 
 :root {
   /* Primary scale */
@@ -32,24 +34,44 @@
   /* Semantic colors */
   --success-500: #00a63e;
   --danger-500: #fb2c36;
+  --danger-600: #e11d28;
   --warning-500: #ffa500;
 
-  /* Text colors */
-  --text-title: #f9fafb;
+  /* Text hierarchy */
+  --text-title: #f1f5f9;
   --text-paragraph: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-black: #000000;
+  --text-muted: #64748b;
+  --text-faint: #374151;
   --text-white: #ffffff;
 
-  /* App UI colors */
-  --bg-primary: var(--gray-950);
-  --bg-secondary: var(--gray-900);
-  --border-color: var(--gray-800);
+  /* Surfaces */
+  --bg-primary: #050d18;
+  --bg-secondary: #0c1627;
+  --bg-elevated: #111f35;
+  --border-color: #1a2e4a;
+  --border-subtle: #0f1f33;
 }
 
 /* =========================
-BASE STYLES
+FONTS
 ========================= */
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* =========================
+BASE RESET
+========================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html,
 body {
@@ -57,21 +79,18 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-paragraph);
   font-family:
-    ui-sans-serif,
+    var(--font-geist-sans, ui-sans-serif),
     system-ui,
     -apple-system,
-    Segoe UI,
+    "Segoe UI",
     Roboto,
     Helvetica,
     Arial,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
-}
-
-/* Smooth rendering */
-
-* {
-  box-sizing: border-box;
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent blue flash on tap (mobile) */
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -80,89 +99,85 @@ a {
 }
 
 /* =========================
-CUSTOM UTILITIES
+CUSTOM UTILITY CLASSES
 ========================= */
 
 @layer utilities {
-  .bg-app {
-    background-color: var(--bg-primary);
-  }
+  /* Surfaces */
+  .bg-app    { background-color: var(--bg-primary); }
+  .bg-panel  { background-color: var(--bg-secondary); }
+  .bg-raised { background-color: var(--bg-elevated); }
 
-  .bg-panel {
-    background-color: var(--bg-secondary);
-  }
+  /* Borders */
+  .border-app    { border-color: var(--border-color); }
+  .border-subtle { border-color: var(--border-subtle); }
 
-  .border-app {
-    border-color: var(--border-color);
-  }
+  /* Text */
+  .text-title     { color: var(--text-title); }
+  .text-paragraph { color: var(--text-paragraph); }
+  .text-muted     { color: var(--text-muted); }
+  .text-faint     { color: var(--text-faint); }
+  .text-primary   { color: var(--primary-500); }
 
-  .text-title {
-    color: var(--text-title);
-  }
+  /* Selection/active */
+  .bg-primary-soft  { background-color: rgba(135, 76, 255, 0.12); }
+  .bg-primary-hover { background-color: rgba(135, 76, 255, 0.08); }
+  .border-primary-soft { border-color: rgba(135, 76, 255, 0.35); }
 
-  .text-muted {
-    color: var(--text-muted);
+  /* Card hover lift */
+  .card-hover {
+    transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
   }
-
-  .text-paragraph {
-    color: var(--text-paragraph);
-  }
-
-  .text-primary {
-    color: var(--primary-500);
-  }
-
-  .bg-primary-soft {
-    background-color: rgba(135, 76, 255, 0.1);
-  }
-
-  .border-primary-soft {
-    border-color: rgba(135, 76, 255, 0.4);
+  .card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
 /* =========================
-SCROLLBAR STYLING
+SCROLLBARS
 ========================= */
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+::-webkit-scrollbar          { width: 5px; height: 5px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    {
+  background: var(--border-color);
+  border-radius: 99px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-700); }
 
-::-webkit-scrollbar-track {
-  background: var(--gray-950);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gray-800);
-  border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-700);
-}
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
 
 /* =========================
-TRANSITIONS
+COMPONENT TRANSITIONS
+Only interactive elements — NOT div — to avoid fighting Tailwind
 ========================= */
 
 button,
 a,
-div {
-  transition: all 0.2s ease-in-out;
+input,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
 }
 
 /* =========================
-SELECTION STYLE
+TEXT SELECTION
 ========================= */
 
 ::selection {
-  background: var(--primary-500);
-  color: white;
+  background-color: rgba(135, 76, 255, 0.4);
+  color: var(--text-title);
 }
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =========================
+FOCUS VISIBLE — consistent ring for keyboard nav
+========================= */
+
+:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

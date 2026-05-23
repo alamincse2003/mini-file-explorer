@@ -7,7 +7,6 @@ import Topbar from './Topbar';
 
 export default function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
@@ -16,6 +15,9 @@ export default function AppShell() {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+
+        {/* Thin separator line between sidebar and main */}
+        <div className="w-px shrink-0 bg-(--border-subtle)" />
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <MainPanel />

@@ -49,30 +49,29 @@ function TreeNode({ node, depth }: TreeNodeProps) {
           tabIndex={0}
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
+          style={{ paddingLeft: `${depth * 12 + 6}px` }}
           className={[
-            'group flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-md pr-1',
-            'text-sm outline-none transition-colors duration-150',
+            'group flex h-6.5 cursor-pointer select-none items-center gap-1 rounded-md pr-1',
+            'text-[13px] outline-none',
+            'transition-colors duration-100',
             isSelected
               ? 'bg-primary-soft text-title'
               : 'text-paragraph hover:bg-(--gray-800) hover:text-title',
             'focus-visible:ring-1 focus-visible:ring-(--primary-500)',
           ].join(' ')}
         >
-          {/* Chevron column */}
+          {/* Chevron slot — fixed width keeps files aligned with folders */}
           <span className="flex w-3 shrink-0 items-center justify-center">
             {isFolder && <FolderChevron isExpanded={isExpanded} />}
           </span>
 
           <NodeIcon nodeType={node.type} name={node.name} isExpanded={isExpanded} />
 
-          {/* Name or rename input */}
           {actions.renaming ? (
             <InlineRenameInput
               value={actions.renameDraft}
               onChange={actions.setRenameDraft}
               onCommit={actions.commitRename}
-              onCancel={actions.cancelRename}
               onKeyDown={actions.onRenameKeyDown}
               className="text-xs"
             />
@@ -80,7 +79,6 @@ function TreeNode({ node, depth }: TreeNodeProps) {
             <span className="min-w-0 flex-1 truncate">{node.name}</span>
           )}
 
-          {/* Per-node action menu — appears on hover */}
           {!actions.renaming && (
             <TreeNodeMenu
               node={node}
@@ -90,9 +88,9 @@ function TreeNode({ node, depth }: TreeNodeProps) {
           )}
         </div>
 
-        {/* Children */}
+        {/* Animated children container */}
         {isFolder && isExpanded && hasChildren && (
-          <ul role="group" className="mt-0.5">
+          <ul role="group" className="mt-px">
             {node.children!.map((child) => (
               <TreeNode key={child.id} node={child} depth={depth + 1} />
             ))}
@@ -100,7 +98,6 @@ function TreeNode({ node, depth }: TreeNodeProps) {
         )}
       </li>
 
-      {/* Delete confirmation rendered at root to escape stacking context */}
       {actions.confirmingDelete && (
         <ConfirmDialog
           title={`Delete "${node.name}"?`}

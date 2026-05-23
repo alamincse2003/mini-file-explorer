@@ -12,15 +12,8 @@ export default function ContextMenu({ onRename, onDelete }: ContextMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  function handleRename() {
-    setOpen(false);
-    onRename();
-  }
-
-  function handleDelete() {
-    setOpen(false);
-    onDelete();
-  }
+  function handleRename() { setOpen(false); onRename(); }
+  function handleDelete() { setOpen(false); onDelete(); }
 
   return (
     <div
@@ -32,29 +25,33 @@ export default function ContextMenu({ onRename, onDelete }: ContextMenuProps) {
         aria-label="More options"
         onClick={() => setOpen((v) => !v)}
         onBlur={(e) => {
-          if (!wrapperRef.current?.contains(e.relatedTarget as Node)) {
-            setOpen(false);
-          }
+          if (!wrapperRef.current?.contains(e.relatedTarget as Node)) setOpen(false);
         }}
-        className="flex h-6 w-6 items-center justify-center rounded-md text-muted outline-none opacity-0 transition-opacity group-hover:opacity-100 hover:bg-(--gray-700) hover:text-title focus:opacity-100"
+        className={[
+          'flex h-6 w-6 items-center justify-center rounded-md outline-none',
+          'text-muted opacity-0 transition-opacity group-hover:opacity-100',
+          'hover:bg-(--gray-700) hover:text-title focus:opacity-100',
+          open ? 'opacity-100' : '',
+        ].join(' ')}
       >
         <MoreVertical size={13} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-7 z-40 min-w-[128px] overflow-hidden rounded-lg border border-app bg-panel shadow-xl">
+        <div className="absolute right-0 top-7 z-40 min-w-32 overflow-hidden rounded-xl border border-app bg-panel shadow-2xl">
           <button
             onMouseDown={(e) => { e.preventDefault(); handleRename(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-xs text-paragraph transition-colors hover:bg-(--gray-800) hover:text-title"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-paragraph hover:bg-(--gray-800) hover:text-title"
           >
-            <Pencil size={12} />
+            <Pencil size={12} className="shrink-0 text-muted" />
             Rename
           </button>
+          <div className="mx-2 h-px bg-(--border-color)" />
           <button
             onMouseDown={(e) => { e.preventDefault(); handleDelete(); }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-xs text-(--danger-500) transition-colors hover:bg-(--gray-800)"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--danger-500) hover:bg-(--gray-800)"
           >
-            <Trash2 size={12} />
+            <Trash2 size={12} className="shrink-0" />
             Delete
           </button>
         </div>

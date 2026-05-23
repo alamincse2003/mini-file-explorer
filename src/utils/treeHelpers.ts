@@ -1,4 +1,4 @@
-import { FileNode } from '@/types';
+import { FileNode } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Read helpers
@@ -15,7 +15,10 @@ export function findNodeById(tree: FileNode, id: string): FileNode | null {
   return null;
 }
 
-export function findParentNode(tree: FileNode, childId: string): FileNode | null {
+export function findParentNode(
+  tree: FileNode,
+  childId: string,
+): FileNode | null {
   if (!tree.children?.length) return null;
 
   for (const child of tree.children) {
@@ -25,19 +28,13 @@ export function findParentNode(tree: FileNode, childId: string): FileNode | null
   }
   return null;
 }
-
-// ---------------------------------------------------------------------------
-// Write helpers — every function returns a structurally-shared new tree.
-// No node is mutated; only ancestors on the path to the target are replaced.
-// ---------------------------------------------------------------------------
-
 export function addNodeToTree(
   tree: FileNode,
   parentId: string,
-  newNode: FileNode
+  newNode: FileNode,
 ): FileNode {
   if (tree.id === parentId) {
-    if (tree.type !== 'folder') return tree;
+    if (tree.type !== "folder") return tree;
     return {
       ...tree,
       updatedAt: Date.now(),
@@ -50,7 +47,7 @@ export function addNodeToTree(
   return {
     ...tree,
     children: tree.children.map((child) =>
-      addNodeToTree(child, parentId, newNode)
+      addNodeToTree(child, parentId, newNode),
     ),
   };
 }
@@ -68,7 +65,7 @@ export function deleteNodeFromTree(tree: FileNode, id: string): FileNode {
 export function renameNodeInTree(
   tree: FileNode,
   id: string,
-  name: string
+  name: string,
 ): FileNode {
   if (tree.id === id) {
     return { ...tree, name: name.trim(), updatedAt: Date.now() };
@@ -78,16 +75,14 @@ export function renameNodeInTree(
 
   return {
     ...tree,
-    children: tree.children.map((child) =>
-      renameNodeInTree(child, id, name)
-    ),
+    children: tree.children.map((child) => renameNodeInTree(child, id, name)),
   };
 }
 
 export function updateFileContentInTree(
   tree: FileNode,
   id: string,
-  content: string
+  content: string,
 ): FileNode {
   if (tree.id === id) {
     return { ...tree, content, updatedAt: Date.now() };
@@ -98,7 +93,7 @@ export function updateFileContentInTree(
   return {
     ...tree,
     children: tree.children.map((child) =>
-      updateFileContentInTree(child, id, content)
+      updateFileContentInTree(child, id, content),
     ),
   };
 }
@@ -106,7 +101,7 @@ export function updateFileContentInTree(
 export function moveNodeInTree(
   tree: FileNode,
   nodeId: string,
-  targetParentId: string
+  targetParentId: string,
 ): FileNode {
   const nodeToMove = findNodeById(tree, nodeId);
   if (!nodeToMove) return tree;
@@ -115,14 +110,12 @@ export function moveNodeInTree(
   return addNodeToTree(withoutNode, targetParentId, nodeToMove);
 }
 
-// ---------------------------------------------------------------------------
 // Pure predicate helpers
-// ---------------------------------------------------------------------------
 
 export function isDescendant(
   tree: FileNode,
   ancestorId: string,
-  descendantId: string
+  descendantId: string,
 ): boolean {
   const ancestor = findNodeById(tree, ancestorId);
   if (!ancestor) return false;

@@ -3,10 +3,10 @@
 import {
   ArrowLeft,
   Check,
+  File,
   FileCode,
   FileJson,
   FileText,
-  File,
   Save,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,6 +40,8 @@ function resolveLanguageLabel(name: string): string {
   return (map[ext] ?? ext.toUpperCase()) || "Text";
 }
 
+// Editor header
+
 interface EditorHeaderProps {
   file: FileNode;
   isDirty: boolean;
@@ -59,25 +61,26 @@ function EditorHeader({
   const lang = resolveLanguageLabel(file.name);
 
   return (
-    <div className="flex h-11 shrink-0 items-center gap-2 border-b border-app bg-panel px-3">
+    <div className="flex h-10 shrink-0 items-center gap-2 border-b border-app bg-panel px-2">
       <button
         onClick={onClose}
         aria-label="Back to folder view"
         title="Back to folder view"
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-(--gray-800) hover:text-title"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted hover:bg-(--gray-800) hover:text-title"
       >
         <ArrowLeft size={14} />
       </button>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <Icon size={14} className={`shrink-0 ${color}`} />
-        <span className="truncate text-sm font-medium text-title">
+      {/* Tab pill */}
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden rounded-md border border-app bg-(--gray-900) px-2.5 py-1">
+        <Icon size={13} className={`shrink-0 ${color}`} />
+        <span className="truncate text-xs font-medium text-title">
           {file.name}
         </span>
         {isDirty && (
           <span
             title="Unsaved changes"
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-(--primary-500)"
+            className="ml-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--primary-500)"
           />
         )}
       </div>
@@ -92,7 +95,7 @@ function EditorHeader({
         aria-label="Save file"
         title="Save (Ctrl+S)"
         className={[
-          "flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-all",
+          "flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium",
           isSaved
             ? "bg-(--success-500)/15 text-(--success-500)"
             : isDirty
@@ -114,62 +117,69 @@ function EditorHeader({
   );
 }
 
-interface EditorFooterProps {
+// Editor footer
+
+function EditorFooter({
+  lines,
+  chars,
+  col,
+}: {
   lines: number;
   chars: number;
-}
-
-function EditorFooter({ lines, chars }: EditorFooterProps) {
+  col: number;
+}) {
   return (
     <div className="flex h-6 shrink-0 items-center gap-4 border-t border-app bg-panel px-3">
-      <span className="text-[11px] text-muted">Ln {lines}</span>
-      <span className="text-[11px] text-muted">{chars} chars</span>
+      <span className="text-[11px] text-muted">
+        Ln {lines}, Col {col}
+      </span>
+      <span className="text-[11px] text-muted">
+        {chars.toLocaleString()} chars
+      </span>
     </div>
   );
 }
 
-// Main editor
+//  Main editor
 
-interface TextEditorProps {
-  file: FileNode;
-}
-
-export default function TextEditor({ file }: TextEditorProps) {
+export default function TextEditor({ file }: { file: FileNode }) {
   const { updateFileContent, openFile } = useExplorer();
 
   const [draft, setDraft] = useState(file.content ?? "");
   const [isSaved, setIsSaved] = useState(false);
+  const [cursorCol, setCursorCol] = useState(1);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isDirty = draft !== (file.content ?? "");
 
-  // Sync draft when the opened file changes (different file selected)
+  // Sync draft on file switch
   useEffect(() => {
     setDraft(file.content ?? "");
     setIsSaved(false);
+    setCursorCol(1);
   }, [file.id, file.content]);
 
   const save = useCallback(() => {
     if (!isDirty) return;
     updateFileContent(file.id, draft);
-
     setIsSaved(true);
     if (savedTimer.current) clearTimeout(savedTimer.current);
     savedTimer.current = setTimeout(() => setIsSaved(false), 2000);
   }, [isDirty, draft, file.id, updateFileContent]);
 
-  // Ctrl+S / Cmd+S keyboard shortcut
+  // Ctrl+S / Cmd+S
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
+    function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         save();
       }
     }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [save]);
 
-  // Clean up timer on unmount
+  // Timer cleanup
   useEffect(
     () => () => {
       if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -177,8 +187,15 @@ export default function TextEditor({ file }: TextEditorProps) {
     [],
   );
 
+  function updateCursorPos() {
+    const el = textareaRef.current;
+    if (!el) return;
+    const before = el.value.slice(0, el.selectionStart);
+    const linesBefore = before.split("\n");
+    setCursorCol(linesBefore[linesBefore.length - 1].length + 1);
+  }
+
   const lines = draft.split("\n").length;
-  const chars = draft.length;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -191,20 +208,26 @@ export default function TextEditor({ file }: TextEditorProps) {
       />
 
       <textarea
+        ref={textareaRef}
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          updateCursorPos();
+        }}
+        onKeyUp={updateCursorPos}
+        onClick={updateCursorPos}
         spellCheck={false}
         aria-label={`Editor for ${file.name}`}
         className={[
-          "min-h-0 flex-1 resize-none bg-app p-4",
-          "font-mono text-sm leading-relaxed text-title",
+          "min-h-0 flex-1 resize-none bg-app p-5",
+          "font-mono text-[13px] leading-6 text-title",
           "outline-none placeholder:text-muted",
-          "selection:bg-(--primary-500)/30",
+          "selection:bg-(--primary-500)/25",
         ].join(" ")}
         placeholder="Empty file — start typing…"
       />
 
-      <EditorFooter lines={lines} chars={chars} />
+      <EditorFooter lines={lines} chars={draft.length} col={cursorCol} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { FolderOpen, PanelLeftOpen } from 'lucide-react';
+import { FolderOpen, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 interface TopbarProps {
   onSidebarToggle: () => void;
@@ -9,26 +9,32 @@ interface TopbarProps {
 
 export default function Topbar({ onSidebarToggle, isSidebarOpen }: TopbarProps) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-app bg-panel px-4">
-      {!isSidebarOpen && (
-        <button
-          onClick={onSidebarToggle}
-          aria-label="Open sidebar"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-(--gray-800) hover:text-title lg:hidden"
-        >
-          <PanelLeftOpen size={15} />
-        </button>
-      )}
+    <header className="flex h-11 shrink-0 items-center gap-0 border-b border-app bg-panel">
+      {/* Sidebar toggle — always visible, aligns with sidebar header */}
+      <button
+        onClick={onSidebarToggle}
+        aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        title={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        className={[
+          'flex h-11 w-12 shrink-0 items-center justify-center',
+          'text-muted hover:bg-(--gray-800) hover:text-title',
+          'border-r border-app',
+        ].join(' ')}
+      >
+        {isSidebarOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
+      </button>
 
-      <div className="flex items-center gap-2">
-        <FolderOpen size={16} className="text-primary" />
-        <span className="text-sm font-semibold text-title tracking-wide">
+      {/* Brand */}
+      <div className="flex items-center gap-2 px-4">
+        <FolderOpen size={15} className="shrink-0 text-primary" />
+        <span className="text-sm font-semibold tracking-wide text-title">
           Mini File Explorer
         </span>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <span className="hidden text-xs text-muted sm:block">
+      {/* Right slot */}
+      <div className="ml-auto flex items-center gap-3 px-4">
+        <span className="hidden text-[11px] font-medium text-muted sm:block">
           Next.js · TypeScript · Tailwind
         </span>
       </div>
